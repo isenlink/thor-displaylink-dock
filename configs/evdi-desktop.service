@@ -1,11 +1,21 @@
+# ============================================================================
+# evdi-desktop.service — 桌面会话 unit（参考副本）
+#
+# 注意：正常部署不需要手工安装本文件——scripts/deploy.sh 会在部署时
+# 现场生成同款 unit（ExecStart 路径随你的 rootfs 参数而变，下方为
+# ROOTFS=/brand_data/displaylink/desktop-rootfs 时的实际形态）。
+# 本文件用途：审查/对照/手工兜底。
+#
+# 安放（仅手工兜底时）：/etc/systemd/system/evdi-desktop.service
+# ============================================================================
 [Unit]
-Description=DRIVE Thor dock display desktop session (openbox + XFCE on evdi :1)
+Description=Dock display - portable XFCE desktop session on :1
 After=xorg-evdi.service
-Wants=xorg-evdi.service
+Requires=xorg-evdi.service
 
 [Service]
 Type=simple
-ExecStart=/bin/bash /brand_data/displaylink/evdi-desktop-session.sh
+ExecStart=/brand_data/displaylink/evdi-desktop-session.sh
 Restart=on-failure
 RestartSec=5
 

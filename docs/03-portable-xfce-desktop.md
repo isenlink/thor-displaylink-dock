@@ -8,6 +8,8 @@
 
 一条命令：拉 noble arm64 索引（main/universe ±updates）→ python3 依赖闭包 → 下载（重试+持久 pool）→ `dpkg-deb -x` 合并 → 打包 `desktop-rootfs.tgz`。
 
+**可选输入 `board-installed.txt`**：放在构建目录（脚本工作目录）时，脚本把它当"板上已有的包"清单（空白分隔的包名；生成法：板上 `dpkg -l | awk '/^ii/{print $2}' > board-installed.txt`），闭包计算会排除这些包以减重。**没有此文件构建照常进行**——只是不减重，产物更自包含（推荐直接不带它跑）。
+
 种子包：openbox、xfdesktop**4**、xfce4-panel、xfsettingsd、xfconf、xfce4-notifyd、thunar、xfce4-terminal、xterm、xfce4-screenshooter、xfce4-appfinder、xfce4-whiskermenu-plugin、obconf、menu。
 
 实测重放：8736 文件 / ~52MB / EXIT=0。
@@ -15,7 +17,7 @@
 **构建脚本里的坑（都在脚本里有对应处理，读懂再改）**：
 1. **包名带版本号陷阱**：noble 里没有 `xfdesktop` 这个种子名（真名 `xfdesktop4`），闭包计算对不存在的种子名**静默跳过** → rootfs 缺二进制。部署后必须 `ls` 验关键二进制（thunar 同理带 `-data` 子包）。
 2. **Ubuntu ports 索引 URL**：`dists/noble/<suite>/<comp>/binary-arm64/Packages.gz`（是 `binary-arm64`；裸 `arm64` 404）。
-3. **下载重试 + 持久 pool**：瞬时网络失败几个包就整场挂；工作目录用持久 `.build-work/pool` 复用已下载包（mktemp+trap EXIT 会在断言失败时把 pool 删光）。
+3. **下载重试 + 持久 pool**：瞬时网络失败几个包就整场挂；工作目录用持久 `.build-work/pool` 复用已下载包（"mktemp + trap EXIT 清理"的写法会在断言失败时把 pool 一并删光——正是为此被否决，脚本才改用持久目录）。
 4. **tar -T 列表坑**：`dpkg-deb -c` 输出含目录行，喂给 `tar -T` 会把目录当参数递归展开（实测 56174 文件/55MB 假象）→ 文件清单用 `os.path.isfile` 过滤后再打包。
 
 ## 板上部署：`scripts/deploy.sh`

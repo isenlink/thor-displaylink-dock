@@ -30,10 +30,11 @@ curl -sL <下载页URL> | grep -oE '/sites/default/files/exe_files/[^"]+\.(zip|r
 实例（6.3 版，实测可用）：
 
 ```
-https://www.synaptics.com/sites/default/files/exe_files/2026-06/DisplayLink%20USB%20Graphics%20Software%20for%20Ubuntu6.3-EXE.zip
+下载页：https://www.synaptics.com/products/displaylink-usb-graphics-software-ubuntu-63
+文件：  https://www.synaptics.com/sites/default/files/exe_files/2026-06/DisplayLink%20USB%20Graphics%20Software%20for%20Ubuntu6.3-EXE.zip
 ```
 
-（19,846,292 字节 zip，解压得 `displaylink-driver-6.3.0-48.run`，Makeself 2.5.0 自解压格式。）
+（19,846,292 字节 zip，sha256 `7269856c7527060c513215ce1b5a36fef074d8e89cab89bcab13df342acce098`，解压得 `displaylink-driver-6.3.0-48.run`，Makeself 2.5.0 自解压格式。新版请到 synaptics.com 的 DisplayLink Ubuntu 软件页按同法挖直链。）
 
 ### 3. 非交互安装：`--accept` + `yes |`
 
@@ -61,6 +62,19 @@ Synaptics APT 仓（`https://www.synaptics.com/sites/default/files/Ubuntu`，dis
 ## 路线 B：DriveOS 板（rootfs 只读、无 apt、无网）
 
 板上无法跑 .run 安装器，采用**文件级落位**：把驱动件直接放到 `/var/lib/displaylink/`（这是 DLM systemd unit 的硬编码工作目录）。
+
+### 驱动件来源（先解决这个，再动手——`evdi.ko` 是内核模块，必须匹配板内核）
+
+⛔ **硬约束**：`evdi.ko` 的 vermagic 必须与板上 `uname -r` 一致，否则 insmod 报 `Invalid module format`，硬失败。x86 机器上的 `.ko`、别的内核版本的 `.ko` 都装不上。
+
+| 来源 | 拿什么 | 适用 |
+|---|---|---|
+| **本仓 Release 资产 `dl-driver-stack.tgz`** | 板上生产驱动目录整包（内核 `6.1.119-rt45-prod-rt-tegra` aarch64，DLM 6.4.0-22，evdi 1.15.1，含 4 个 spkg 固件） | 你的板内核 vermagic 与之相同 → 直接用（先 `modinfo` 校验再落位） |
+| 板厂商 BSP/驱动仓库 | 同内核编译的 `evdi.ko` + 用户态件 | 有厂商通道时最优 |
+| 另一块**同内核版本**的板 | `/var/lib/displaylink/` 整目录 + `/etc/udev/rules.d/99-displaylink.rules` + 三个 systemd unit | 有同内核姊妹板时 |
+| Synaptics 官方 `.run` 包（docs/01 路线 A 下载） | 解出用户态件（DLM/spkg/libevdi/x 工具/udev 规则/unit），`evdi.ko` 单独对板内核编译 | 板内核头文件与编译环境可得时（DriveOS 板上通常不可行，交叉编译超出本仓范围） |
+
+用户态件（DLM 等）不依赖内核版本，从任何官方 `.run` 包解出即可用；**只有 `evdi.ko` 是硬约束**。
 
 ### 板上驱动件清单（与 x86 安装包同源）
 

@@ -51,12 +51,21 @@ scripts/
 configs/
   xorg-evdi.conf              minimal Xorg config driving evdi card1 on :1
   xorg-evdi.service           systemd unit for the dedicated Xorg :1
-  evdi-desktop.service        systemd unit for the desktop session
+  evdi-desktop.service        reference copy of the desktop session unit (deploy.sh generates the real one)
+  evdi-display-client.service systemd unit for the minimal clock client (A5)
   displaylink-driver.service  DLM unit (with the board's libusb preload workaround)
   99-displaylink.rules        upstream DisplayLink udev rules (unchanged)
 ```
 
-**Release assets**: prebuilt `desktop-rootfs.tgz` (~52 MB) is attached to the GitHub Release (sha256 in the release notes) — you can skip the build step entirely.
+**Release assets** (v1.0.0, sha256 in the release notes):
+
+| Asset | What it is |
+|---|---|
+| `desktop-rootfs.tgz` (~52 MB) | prebuilt portable XFCE rootfs — skip the build step entirely |
+| `dl-driver-stack.tgz` (~7 MB) | board driver stack as deployed: DLM 6.4.0-22 + evdi 1.15.1 (`libevdi.so.1.15.1`) + `evdi.ko` (vermagic `6.1.119-rt45-prod-rt-tegra aarch64`) + 4 dock firmware `.spkg` + udev rules + unit. Usable as-is only on boards whose `uname -r` matches — always `modinfo`-check vermagic first (docs/01) |
+| (reference) official Synaptics package | `DisplayLink USB Graphics Software for Ubuntu` 6.3 — download page `https://www.synaptics.com/products/displaylink-usb-graphics-software-ubuntu-63`, file `displaylink-driver-6.3.0-48.run` inside the EXE zip (sha256 `7269856c…ce098`, see docs/01) |
+
+DisplayLink binaries are © Synaptics and included here only for reproduction convenience alongside the official source link; prefer the official download for anything other than this exact board-kernel scenario.
 
 ## Three routes
 
@@ -78,7 +87,7 @@ configs/
 
 ## Naming note / 代称说明
 
-- `/brand_data` is a **placeholder** for the board's writable persistent data partition (a large ext4 partition mounted at `/`, name pattern `<vendor>_data`). Replace it with your board's real path (`ls /`, `df -h`) or let `deploy.sh`'s `ROOTFS` argument decide. Scripts take it as a parameter/placeholder — see each script header.
+- `/brand_data` is a **placeholder** for the board's writable persistent data partition (a large ext4 partition, name pattern `<vendor>_data`). Scripts **hard-code** `/brand_data` as that placeholder (including `scripts/apply_displaylink.sh` and the session script). If your partition name differs, sed-replace it across the repo before deploying — example in [AI-REPRODUCTION-GUIDE.md](AI-REPRODUCTION-GUIDE.md) §A7. Find your partition with `ls /` / `df -h`.
 - Board hostname/IP in examples (`192.168.1.105`) is a plain LAN address; replace with your board's.
 - `nvidia` is the stock account name on NVIDIA DRIVE boards (as shipped), not a personal name.
 

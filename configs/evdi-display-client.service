@@ -1,0 +1,22 @@
+# ============================================================================
+# evdi-display-client.service — 最小点亮路线的时钟客户端 unit（A5 用）
+# 作用：开机自动拉起全屏时钟，保持 DLM 帧流 → 屏常亮（裸 Xorg 无客户端=黑屏，
+#       见 docs/02 第 2/3 层）。走 A6 完整桌面时 disable 掉它即可。
+#
+# 安放：/etc/systemd/system/evdi-display-client.service
+# 依赖：脚本本体需先落到持久位（/tmp 会丢）：
+#   sudo install -m755 /tmp/evdi-display-client.sh /brand_data/displaylink/evdi-display-client.sh
+# ============================================================================
+[Unit]
+Description=Full-screen clock client on :1 (keeps DisplayLink frame stream alive)
+After=xorg-evdi.service
+Requires=xorg-evdi.service
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /brand_data/displaylink/evdi-display-client.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
