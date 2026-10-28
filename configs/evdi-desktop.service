@@ -1,0 +1,13 @@
+[Unit]
+Description=DRIVE Thor dock display desktop session (openbox + XFCE on evdi :1)
+After=xorg-evdi.service
+Wants=xorg-evdi.service
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /brand_data/displaylink/evdi-desktop-session.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

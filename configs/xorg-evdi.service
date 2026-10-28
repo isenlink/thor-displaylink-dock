@@ -1,0 +1,18 @@
+# ============================================================================
+# xorg-evdi.service — 启动 Xorg :1（evdi 虚拟显卡）
+# 安放：/etc/systemd/system/xorg-evdi.service
+# ============================================================================
+[Unit]
+Description=Xorg on evdi virtual GPU (DisplayLink dock) :1
+After=displaylink.service
+Wants=displaylink.service
+
+[Service]
+Type=simple
+ExecStartPre=/bin/sh -c 'mkdir -p /var/lib/xorg-evdi && chown root:root /var/lib/xorg-evdi'
+ExecStart=/usr/bin/Xorg :1 -config /var/lib/xorg-evdi/xorg-evdi.conf
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=DisplayLink Driver Service
+After=multi-user.target
+
+[Service]
+ExecStartPre=/bin/sh -c 'lsmod | grep -q evdi || insmod /var/lib/displaylink/evdi.ko initial_device_count=1'
+Environment=LD_LIBRARY_PATH=/var/lib/displaylink
+Environment=LD_PRELOAD=/var/lib/displaylink/libusb-1.0.so.0.6.0
+ExecStart=/var/lib/displaylink/DisplayLinkManager
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
